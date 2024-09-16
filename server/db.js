@@ -28,7 +28,7 @@ const createTables = async() => {
 
   CREATE TABLE vacations(
   id UUID PRIMARY KEY,
-  depature_date DATE NOT NULL,
+  departure_date DATE NOT NULL,
   user_id UUID REFERENCES users(id) NOT NULL,
   place_id UUID REFERENCES places(id) NOT NULL
   );
@@ -40,66 +40,107 @@ const createTables = async() => {
 
 //create methods to create users and places
 
-const createUser = async(name) => {
+const createUser = async({name}) => {
 
   const SQL = `
   INSERT INTO users(id, name) VALUES ($1, $2) RETURNING *
   `;
 
-  const response = await client.query(SQL, [uuid.v4(), name]);
+  const response = await client.query(SQL, [uuid(), name]);
 
   return response.rows[0];
 };
 
-const createPlace =async (name) => {
+const createPlace =async ({name}) => {
 
   const SQL = `
   INSERT INTO places (id, name) VALUES ($1, $2) RETURNING *
   `;
 
-  const response = await client.query(SQL, [uuid.v4(), name]);
+  const response = await client.query(SQL, [uuid(), name]);
 
   return response.rows[0];
 };
 
+// create fetchUsers and fetchPlaces method
 
+const fetchUsers = async() => {
+
+  const SQL = `
+  SELECT * FROM users
+  `;
+
+  const response = await client.query(SQL);
+  
+  return response.rows;
+
+};
+
+const fetchPlaces = async() => {
+
+  const SQL = `
+  SELECT * FROM places
+  `;
+
+  const response = await client.query(SQL);
+
+  return response.rows;
+
+};
+
+//create the createVacation and fetchVacations methods
+
+const createVacation  =  async({user_id, place_id, departure_date}) => {
+
+  const SQL = `
+  INSERT INTO vacations(id, user_id, place_id, departure_date) VALUES ($1, $2, $3, $4)
+  RETURNING *
+  `;
+
+  const response = await client.query(SQL, [uuid(), user_id, place_id, departure_date]);
+
+  return response.rows[0];
+
+};
+
+const fetchVacations = async() => {
+
+  const SQL = `SELECT * FROM vacations`;
+
+  const response = await client.query(SQL);
+
+  return response.rows
+
+};
+
+// create destroyVacation method
+
+const destroyVacation = async({id, user_id}) => {
+
+  console.log(id, user_id)
+
+  const SQL = `
+  DELETE FROM vacations
+  WHERE id=$1 AND user_id=$2
+  `;
+
+  await client.query(SQL, [id, user_id]);
+
+};
 
 //export the modules
 
 module.exports = {
-  client
+  client,
+  createTables,
+  createUser, 
+  createPlace, 
+  createVacation,
+  fetchUsers, 
+  fetchPlaces, 
+  fetchVacations,
+  destroyVacation
 };
 
 
 
-
-
-// let SQL = `
-//   INSERT INTO users (name) VALUES ('Ozan Cicek');
-//   INSERT INTO users (name) VALUES ('Mariana Curti');
-//   INSERT INTO users (name) VALUES ('Luis Curti');
-//   INSERT INTO users (name) VALUES ('Celdy Curti');
-//   INSERT INTO users (name) VALUES ('Gui Curti');
-//   INSERT INTO users (name) VALUES ('Hasan Cicek');
-//   INSERT INTO users (name) VALUES ('Serpil Cicek');
-//   INSERT INTO users (name) VALUES ('Elif Cicek');
-//   INSERT INTO users (name) VALUES ('Simba Cicek');
-//   INSERT INTO users (name) VALUES ('Chico Cicek');
-//   `;
-
-//   await client.query(SQL);
-//   console.log("User data has been seeded");
-
-// let SQL = `
-//   INSERT INTO places (name) VALUES ('Datca');
-//   INSERT INTO places (name) VALUES ('Chalkidiki');
-//   INSERT INTO places (name) VALUES ('Miami');
-//   INSERT INTO places (name) VALUES ('Rio de Janeiro');
-//   INSERT INTO places (name) VALUES ('Istanbul');
-//   INSERT INTO places (name) VALUES ('Cappadocia');
-//   INSERT INTO places (name) VALUES ('Berlin');
-//   INSERT INTO places (name) VALUES ('Amsterdam');
-//   `;
-
-//   await client.query(SQL);
-//   console.log("Place data has been seeded");
